@@ -1,18 +1,33 @@
 use std::net::TcpStream;
 use std::io::prelude::*;
 
-pub fn read<'a>(stream: &mut TcpStream, buffer: &mut String, delimiter: &'a str) -> Result<usize, ()>{
-    let mut reading: bool = true;
-    let mut internal_buffer: [u8; 1] = [0];
+pub fn read(stream: &mut TcpStream, buffer: &mut String) -> Result<(), ()> {
+    let mut buf: [u8; 1024] = [0; 1024];
     
-    stream.read_exact(&mut internal_buffer);
+    match stream.read(&mut buf) {
+        Ok(_) => (),
+        Err(_) => return Err(())
+    };
     
-    while reading {
-        
-        
-        
-        reading = false;
+    *buffer = String::from_utf8_lossy(&buf[..]).to_string().clone();
+    
+    Ok(())
+}
+
+pub fn write(stream: &mut TcpStream, buffer: &str) -> Result<(), ()> {
+    let buf: &[u8] = buffer.as_bytes();
+    
+    if buf.len() > 1024 {
+        return Err(());
     }
     
-    Ok(buffer.len())
+    match stream.write_all(buf) {
+        Ok(_) => {
+            match stream.flush() {
+                _ => {}
+            };
+            Ok(())
+        },
+        Err(_) => Err(())
+    }
 }

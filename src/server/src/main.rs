@@ -1,10 +1,11 @@
 mod msg_hdl;
 
 use std::net::{TcpListener, TcpStream};
-use std::io::prelude::*;
 use std::thread;
+use std::time;
 
 use common::notif::{Notif, notify};
+use common::stream as Stream;
 // use msg_hdl;
 
 fn main() {
@@ -61,19 +62,31 @@ fn bind_address(address: &str) -> Option<TcpListener> {
 }
 
 fn handle_connection(stream: &mut TcpStream) {
+    let mut buffer: String = String::new();
+    
+    stream.set_read_timeout(Some(time::Duration::from_millis(200))).unwrap();
+    
     loop {
-        match stream.write_all("Hello World!".as_bytes()) {
+        match Stream::read(stream, &mut buffer) {
+            Ok(_) => {
+                notify(Notif::Other(format!("[Client]: {}", buffer).as_str()))
+            },
+            Err(_) => {
+                // notify(Notif::Err("Failed to recieve packet! (Or no request sent :/)"));
+            }
+        };
+        
+        match Stream::write(stream, "Hello World!") {
             Ok(_) => {
                 
             }
             
             Err(_) => {
                 notify(Notif::Err("Failed to send packet!"));
+                break;
             }
         };
         
-        match stream.flush() {
-            _ => {}
-        }
+        thread::sleep(time::Duration::from_millis(50));
     }
 }

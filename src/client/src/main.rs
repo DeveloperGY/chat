@@ -1,7 +1,7 @@
 use std::net::TcpStream;
-use std::io::prelude::*;
 
 use common::notif::{Notif, notify};
+use common::stream as Stream;
 
 fn main() {
     notify(Notif::Info("Starting Client..."));
@@ -20,7 +20,7 @@ fn main() {
     let mut buffer: String = String::new();
     
     loop {
-        match stream.read_to_string(&mut buffer) {
+        match Stream::read(&mut stream, &mut buffer) {
             Ok(_) => {
                 
             }
